@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Toko Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --primary-color: #4361ee;
+            --accent-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --danger-color: #f72585;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* HEADER & PROFIL */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 25px 20px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        .logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+
+        .store-info h2 { margin: 0; font-size: 1.2rem; }
+        .store-info p { margin: 0; font-size: 0.8rem; opacity: 0.8; }
+
+        /* NAVIGATION BOTTOM */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            border: none;
+            background: none;
+            color: #8d99ae;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 1.4rem; }
+
+        /* MAIN SECTIONS */
+        .section { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CARDS & GRID */
+        .katalog-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            text-align: center;
+            position: relative;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .product-card h4 { margin: 5px 0; font-size: 0.9rem; }
+        .product-card .price { color: var(--primary-color); font-weight: bold; font-size: 0.85rem; }
+        .product-card .stock { font-size: 0.7rem; color: #666; }
+
+        /* BUTTONS */
+        .btn-add {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* FORM STYLING */
+        .input-group {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        label { display: block; font-size: 0.8rem; color: #64748b; margin-bottom: 5px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+
+        /* KERANJANG & CHECKOUT */
+        .cart-summary {
+            position: sticky;
+            top: 20px;
+            background: var(--text-main);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        /* RECEIPT DESIGN */
+        #receipt {
+            display: none;
+            background: white;
+            width: 100%;
+            max-width: 300px;
+            padding: 20px;
+            margin: auto;
+            color: black;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #receipt, #receipt * { visibility: visible; }
+            #receipt { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="logo-circle">
+        <img id="display-logo" src="https://via.placeholder.com/100?text=LOGO" alt="Logo">
+    </div>
+    <div class="store-info">
+        <h2 id="view-nama">Smart Toko</h2>
+        <p id="view-alamat">Klik menu pengaturan untuk setting</p>
+        <p id="view-hp"></p>
+    </div>
+</header>
+
+<div id="pos" class="section active">
+    <h3 style="display:flex; justify-content:space-between;">
+        Katalog Barang
+        <span style="font-size: 0.8rem; color: var(--primary-color);" onclick="renderKatalog()"><i class="fas fa-sync"></i> Refresh</span>
+    </h3>
+    <div id="katalog" class="katalog-grid"></div>
+
+    <div class="cart-summary">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+            <span>Item:</span>
+            <span id="cart-count">0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-weight: bold; font-size: 1.2rem;">
+            <span>Total:</span>
+            <span>Rp <span id="grand-total">0</span></span>
+        </div>
+        <button onclick="checkout()" class="btn-add" style="background: var(--success-color); padding: 15px; font-size: 1rem; font-weight: bold; margin-top: 15px;">
+            <i class="fas fa-print"></i> BAYAR & CETAK STRUK
+        </button>
+    </div>
+    
+    <div id="cart-items-list" style="margin-top: 15px; font-size: 0.8rem;"></div>
+</div>
+
+<div id="input-barang" class="section">
+    <h3><i class="fas fa-box-open"></i> Tambah Stok</h3>
+    <div class="input-group">
+        <label>Nama Produk</label>
+        <input type="text" id="p-nama" placeholder="Contoh: Kopi Gula Aren">
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="input-group"><label>Harga Beli</label><input type="number" id="p-beli"></div>
+        <div class="input-group"><label>Harga Jual</label><input type="number" id="p-jual"></div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="input-group"><label>Stok</label><input type="number" id="p-stok"></div>
+        <div class="input-group"><label>Kategori</label><input type="text" id="p-type" placeholder="Minuman"></div>
+    </div>
+    <div class="input-group">
+        <label>Foto Produk</label>
+        <input type="file" id="p-img" accept="image/*">
+    </div>
+    <button onclick="addBarang()" class="btn-add" style="padding: 15px; font-size: 1rem;">SIMPAN BARANG</button>
+
+    <h3 style="margin-top: 30px;">Daftar Inventori</h3>
+    <div id="inventory-list"></div>
+</div>
+
+<div id="pengaturan" class="section">
+    <h3><i class="fas fa-cog"></i> Profil Toko</h3>
+    <div class="input-group">
+        <label>Logo Baru</label>
+        <input type="file" onchange="updateLogo(event)" accept="image/*">
+    </div>
+    <div class="input-group">
+        <label>Nama Toko</label>
+        <input type="text" id="set-nama" placeholder="Nama Toko Anda">
+    </div>
+    <div class="input-group">
+        <label>Alamat Toko</label>
+        <input type="text" id="set-alamat" placeholder="Jl. Raya No. 123">
+    </div>
+    <div class="input-group">
+        <label>No. WhatsApp</label>
+        <input type="text" id="set-hp" placeholder="08123456789">
+    </div>
+    <button onclick="saveSettings()" class="btn-add">UPDATE PROFIL</button>
+</div>
+
+<nav class="bottom-nav">
+    <button class="nav-item active" onclick="navTo('pos', this)">
+        <i class="fas fa-store"></i><span>Toko</span>
+    </button>
+    <button class="nav-item" onclick="navTo('input-barang', this)">
+        <i class="fas fa-plus-circle"></i><span>Barang</span>
+    </button>
+    <button class="nav-item" onclick="navTo('pengaturan', this)">
+        <i class="fas fa-user-edit"></i><span>Profil</span>
+    </button>
+</nav>
+
+<div id="receipt">
+    <center>
+        <img id="r-logo" style="width: 60px; height: 60px; object-fit: contain;"><br>
+        <b id="r-nama"></b><br>
+        <small id="r-alamat"></small><br>
+        <small id="r-hp"></small><br>
+        --------------------------------
+    </center>
+    <div id="r-list"></div>
+    --------------------------------<br>
+    <b>TOTAL : Rp <span id="r-total"></span></b><br>
+    <center><br>Terima Kasih Atas Kunjungan Anda</center>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('smartTokoDB')) || [];
+    let cart = [];
+    let config = JSON.parse(localStorage.getItem('smartTokoCfg')) || {
+        nama: "Smart Toko", alamat: "Alamat Belum Diatur", hp: "08xxx", logo: ""
+    };
+
+    function navTo(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+        if(id === 'pos') renderKatalog();
+        if(id === 'input-barang') renderInventory();
+    }
+
+    // --- MANAJEMEN TOKO ---
+    function updateLogo(e) {
+        const reader = new FileReader();
+        reader.onload = () => config.logo = reader.result;
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function saveSettings() {
+        config.nama = document.getElementById('set-nama').value || config.nama;
+        config.alamat = document.getElementById('set-alamat').value || config.alamat;
+        config.hp = document.getElementById('set-hp').value || config.hp;
+        localStorage.setItem('smartTokoCfg', JSON.stringify(config));
+        location.reload();
+    }
+
+    function initHeader() {
+        document.getElementById('view-nama').innerText = config.nama;
+        document.getElementById('view-alamat').innerText = config.alamat;
+        document.getElementById('view-hp').innerText = config.hp;
+        if(config.logo) document.getElementById('display-logo').src = config.logo;
+    }
+
+    // --- MANAJEMEN BARANG ---
+    function addBarang() {
+        const imgFile = document.getElementById('p-img').files[0];
+        const processAdd = (imgBase64) => {
+            const newItem = {
+                id: Date.now(),
+                nama: document.getElementById('p-nama').value,
+                beli: document.getElementById('p-beli').value,
+                jual: document.getElementById('p-jual').value,
+                stok: parseInt(document.getElementById('p-stok').value),
+                type: document.getElementById('p-type').value,
+                img: imgBase64 || 'https://via.placeholder.com/150?text=Produk'
+            };
+            db.push(newItem);
+            localStorage.setItem('smartTokoDB', JSON.stringify(db));
+            alert('Barang Berhasil Ditambah!');
+            renderInventory();
+        }
+
+        if(imgFile) {
+            const r = new FileReader();
+            r.onload = () => processAdd(r.result);
+            r.readAsDataURL(imgFile);
+        } else { processAdd(); }
+    }
+
+    function renderInventory() {
+        const div = document.getElementById('inventory-list');
+        div.innerHTML = db.map(item => `
+            <div class="input-group" style="display:flex; align-items:center; gap:10px;">
+                <img src="${item.img}" style="width:50px; height:50px; border-radius:8px;">
+                <div style="flex:1">
+                    <b>${item.nama}</b><br>
+                    <small>Stok: ${item.stok} | Jual: ${item.jual}</small>
+                </div>
+                <button onclick="hapusBarang(${item.id})" style="background:var(--danger-color); color:white; border:none; border-radius:5px; padding:5px 10px;">X</button>
+            </div>
+        `).join('');
+    }
+
+    function hapusBarang(id) {
+        if(confirm('Hapus barang ini?')) {
+            db = db.filter(i => i.id !== id);
+            localStorage.setItem('smartTokoDB', JSON.stringify(db));
+            renderInventory();
+        }
+    }
+
+    // --- POS / KASIR ---
+    function renderKatalog() {
+        const kat = document.getElementById('katalog');
+        kat.innerHTML = db.map(item => `
+            <div class="product-card">
+                <img src="${item.img}">
+                <h4>${item.nama}</h4>
+                <div class="price">Rp ${item.jual}</div>
+                <div class="stock">Stok: ${item.stok}</div>
+                <button class="btn-add" onclick="addToCart(${item.id})" ${item.stok < 1 ? 'disabled style="background:#ccc"' : ''}>
+                    ${item.stok < 1 ? 'Habis' : 'Pilih'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function addToCart(id) {
+        const p = db.find(x => x.id === id);
+        const cartItem = cart.find(c => c.id === id);
+        
+        if(cartItem) {
+            if(cartItem.qty < p.stok) cartItem.qty++;
+            else alert('Stok tidak mencukupi');
+        } else {
+            cart.push({...p, qty: 1});
+        }
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let total = 0;
+        let count = 0;
+        cart.forEach(c => {
+            total += (c.jual * c.qty);
+            count += c.qty;
+        });
+        document.getElementById('grand-total').innerText = total.toLocaleString('id-ID');
+        document.getElementById('cart-count').innerText = count;
+        
+        document.getElementById('cart-items-list').innerHTML = cart.map(c => 
+            `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #ccc;">
+                <span>${c.nama} x${c.qty}</span>
+                <span>${(c.jual * c.qty).toLocaleString('id-ID')}</span>
+            </div>`
+        ).join('');
+    }
+
+    function checkout() {
+        if(cart.length === 0) return alert('Pilih barang dulu!');
+
+        // Update Stok DB
+        cart.forEach(c => {
+            const item = db.find(i => i.id === c.id);
+            if(item) item.stok -= c.qty;
+        });
+        localStorage.setItem('smartTokoDB', JSON.stringify(db));
+
+        // Struk Setup
+        document.getElementById('r-logo').src = config.logo;
+        document.getElementById('r-nama').innerText = config.nama;
+        document.getElementById('r-alamat').innerText = config.alamat;
+        document.getElementById('r-hp').innerText = config.hp;
+        document.getElementById('r-total').innerText = document.getElementById('grand-total').innerText;
+        document.getElementById('r-list').innerHTML = cart.map(c => 
+            `<div>${c.nama} x${c.qty} = ${c.jual * c.qty}</div>`
+        ).join('');
+
+        window.print();
+        cart = [];
+        updateCartUI();
+        renderKatalog();
+    }
+
+    // Init
+    initHeader();
+    renderKatalog();
+</script>
+
+</body>
+</html>
